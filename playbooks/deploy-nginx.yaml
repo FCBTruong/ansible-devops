@@ -1,0 +1,56 @@
+- name: Deploy NGINX to minikube
+  hosts: localhost
+  tasks:
+    - name: Create a namespace for the application
+      community.kubernetes.k8s:
+        kubeconfig: ~/.kube/config
+        state: present
+        definition:
+          apiVersion: v1
+          kind: Namespace
+          metadata:
+            name: nginx-app
+    
+    - name: Deploy Nginx to Kubernetes cluster
+      community.kubernetes.k8s:
+        kubeconfig: ~/.kube/config
+        state: present
+        definition:
+          apiVersion: apps/v1
+          kind: Deployment
+          metadata:
+            name: nginx-deployment
+            namespace: nginx-app
+          spec:
+            replicas: 2
+            selector:
+              matchLabels:
+                app: nginx
+              template:
+                metadata:
+                  labels:
+                    app: nginx
+                spec:
+                  containers:
+                    - name: nginx
+                      image: nginx:latest
+                      ports:
+                        - containerPort: 80
+
+    - name: Expose Nginx Service
+      community.kubernetes.k8s:
+        kubeconfig: ~/.kube/config
+        state: present
+        definition:
+          apiVersion: v1
+          kind: Service
+          metadata:
+            name: nginx-service
+            namespace: nginx-app
+          spec:
+            selector:
+              app: nginx
+            ports:
+            - protocol: TCP
+              port: 80
+              targetPort: 80
