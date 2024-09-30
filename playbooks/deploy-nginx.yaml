@@ -1,8 +1,8 @@
-- name: Deploy NGINX to minikube
+- name: Deploy NGINX to Minikube
   hosts: localhost
   tasks:
     - name: Create a namespace for the application
-      community.kubernetes.k8s:
+      kubernetes.core.k8s:  # Use kubernetes.core instead of community.kubernetes
         kubeconfig: ~/.kube/config
         state: present
         definition:
@@ -12,7 +12,7 @@
             name: nginx-app
     
     - name: Deploy Nginx to Kubernetes cluster
-      community.kubernetes.k8s:
+      kubernetes.core.k8s:  # Use kubernetes.core instead of community.kubernetes
         kubeconfig: ~/.kube/config
         state: present
         definition:
@@ -24,21 +24,21 @@
           spec:
             replicas: 2
             selector:
-              matchLabels:
+              matchLabels:              # The selector should match the template labels
                 app: nginx
-              template:
-                metadata:
-                  labels:
-                    app: nginx
-                spec:
-                  containers:
-                    - name: nginx
-                      image: nginx:latest
-                      ports:
-                        - containerPort: 80
+            template:                    # Properly indented and under 'spec'
+              metadata:
+                labels:
+                  app: nginx             # Labels should match the selector
+              spec:
+                containers:
+                  - name: nginx
+                    image: nginx:latest  # Correctly specifies the Nginx image
+                    ports:
+                      - containerPort: 80
 
     - name: Expose Nginx Service
-      community.kubernetes.k8s:
+      kubernetes.core.k8s:  # Use kubernetes.core instead of community.kubernetes
         kubeconfig: ~/.kube/config
         state: present
         definition:
@@ -49,8 +49,8 @@
             namespace: nginx-app
           spec:
             selector:
-              app: nginx
+              app: nginx                # Selector should match the app label in the pod template
             ports:
-            - protocol: TCP
-              port: 80
-              targetPort: 80
+              - protocol: TCP
+                port: 80
+                targetPort: 80
